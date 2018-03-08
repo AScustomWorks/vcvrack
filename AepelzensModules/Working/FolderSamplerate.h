@@ -43,6 +43,47 @@ SRC_STATE* src_delete (SRC_STATE *state);
 */
 
 int src_process (SRC_STATE *state, SRC_DATA *data);
+**	Set a new SRC ratio. This allows step responses
+**	in the conversion ratio.
+**	Returns non zero on error.
+*/
+
+int src_set_ratio (SRC_STATE *state, double new_ratio);
+
+/*
+**	Get the current channel count.
+**	Returns negative on error, positive channel count otherwise
+*/
+
+int src_get_channels (SRC_STATE *state);
+
+/*
+**	Reset the internal SRC state.
+**	Does not modify the quality settings.
+**	Does not free any memory allocations.
+**	Returns non zero on error.
+*/
+
+int src_reset (SRC_STATE *state);
+
+/*
+** Return TRUE if ratio is a valid conversion ratio, FALSE
+** otherwise.
+*/
+
+int src_is_valid_ratio (double ratio);
+
+/*
+**	Return an error number.
+*/
+
+int src_error (SRC_STATE *state);
+
+/*
+**	Convert the error number into a string.
+*/
+	
+const char* src_strerror (int error);
 
 enum {
 	SRC_SINC_BEST_QUALITY		= 0,
