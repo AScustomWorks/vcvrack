@@ -2,6 +2,8 @@
 #include "FolderSamplerate.h"
 // >> digital 0.6 defines SchmittTrigger and PulseGenerator
 //#include "dsp/digital.hpp"
+
+// Well, we no longer have libsamplerate
 //#include "samplerate.h"
 
 #define BUF_LEN 32
@@ -85,6 +87,10 @@ struct Folder : Module {
   float out_buffer[UPSAMPLE_RATIO*BUF_LEN] = {};
   float folded_buffer[BUF_LEN] = {};
 };
+
+void onSampleRateChange() {
+	sampleRate = engineGetSampleRate();
+}
 
 float fold(float in, float threshold)
 {
