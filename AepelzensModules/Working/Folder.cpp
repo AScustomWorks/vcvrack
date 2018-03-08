@@ -35,7 +35,7 @@ struct Folder : Module {
 
   void step() override;
 
-  Folder() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS)r
+  Folder() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS)
   {
     state = src_new(SRC_SINC_MEDIUM_QUALITY, 1, &error);
     state_down = src_new(SRC_SINC_MEDIUM_QUALITY, 1, &error);
