@@ -1,0 +1,9 @@
+Linux softlinks
+
+libsoxr-lsr.so -> libsoxr-lsr.so.0
+libsoxr-lsr.so.0 -> libsoxr-lsr.so.0.1.9
+libsoxr-lsr.so.0.1.9
+
+libsoxr.so -> libsoxr.so.0
+libsoxr.so.0 -> libsoxr.so.0.1.2
+libsoxr.so.0.1.2
