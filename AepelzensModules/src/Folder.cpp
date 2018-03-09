@@ -4,8 +4,8 @@
 
 // Well, we no longer have libsamplerate
 //#include "samplerate.h"
-//Let's try SoX!
-#include "../soxr/include/soxr-lsr.h"
+//Let's try SOX!
+#include "soxr-lsr.h"
 
 #define BUF_LEN 32
 #define UPSAMPLE_RATIO 8

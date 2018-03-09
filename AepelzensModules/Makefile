@@ -6,7 +6,9 @@ SOURCES += $(wildcard src/*.cpp)
 DISTRIBUTABLES += $(wildcard LICENSE*) res
 
 RACK_DIR ?= ../..
-include $(RACK_DIR)/plugin.mk
 
-LIBDIR += "../../plugins/AepelzensModules/sox/lib"
-LDFLAGS += "-L../../plugins/AepelzensModules/soxr/lib -lsoxr-lsr"
+FLAGS += -I$(RACK_DIR)/plugins/AepelzensModules/sox/include
+
+LDFLAGS += -L$(RACK_DIR)/plugins/AepelzensModules/soxr/lib -lsoxr-lsr
+
+include $(RACK_DIR)/plugin.mk
