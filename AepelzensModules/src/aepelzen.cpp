@@ -9,10 +9,10 @@ void init(rack::Plugin *p) {
 
 	p->addModel(modelBurst);
 	p->addModel(modelDice);
-     p->addModel(modelErwin);
-     p->addModel(modelGateSeq);
-     p->addModel(modelQuadSeq);
-     p->addModel(modelWalker);
+	p->addModel(modelErwin);
+	p->addModel(modelGateSeq);
+	p->addModel(modelQuadSeq);
+	p->addModel(modelWalker);
 	p->addModel(modelFolder);
 //      p->addModel(modeldTime);
 }
