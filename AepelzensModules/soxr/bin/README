@@ -1,0 +1,3 @@
+I need to find a home for these msys2 dlls, Rack.exe runs in an env with a limited path.
+I'm not happy about putting third-party dlls into mingw64/bin. Maybe dep/bin?
+Static linking plugin.dll with Soxr doesn't work, maybe because plugin.dll is built with -shared?
