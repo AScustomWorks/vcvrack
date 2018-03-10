@@ -1,5 +1,0 @@
-Name: soxr
-Description: High quality, one-dimensional sample-rate conversion library
-Version: ..
-Libs: -L/home/hpfeil/src/repos/lib -lsoxr
-Cflags: -I/home/hpfeil/src/repos/include
