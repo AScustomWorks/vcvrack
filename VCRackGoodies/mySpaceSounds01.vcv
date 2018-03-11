@@ -1,0 +1,216 @@
+{
+  "version": "0.5.1",
+  "modules": [
+    {
+      "plugin": "Core",
+      "model": "AudioInterface",
+      "pos": [
+        0.0,
+        0.0
+      ],
+      "params": [],
+      "data": {
+        "driver": 6,
+        "device": 0,
+        "sampleRate": 48000.0,
+        "blockSize": 128
+      }
+    },
+    {
+      "plugin": "AS",
+      "model": "Mixer8ch",
+      "pos": [
+        180.0,
+        0.0
+      ],
+      "params": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.80000001192092896,
+        0.80000001192092896,
+        0.80000001192092896,
+        0.80000001192092896,
+        0.80000001192092896,
+        0.80000001192092896,
+        0.80000001192092896,
+        0.80000001192092896,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.39350003004074097,
+        0.0
+      ],
+      "data": {
+        "as_MixerMutes": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      }
+    },
+    {
+      "plugin": "Fundamental",
+      "model": "VCO",
+      "pos": [
+        1140.0,
+        0.0
+      ],
+      "params": [
+        0.0,
+        1.0,
+        -19.763971328735352,
+        0.0,
+        0.5,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "plugin": "Fundamental",
+      "model": "LFO",
+      "pos": [
+        990.0,
+        0.0
+      ],
+      "params": [
+        0.0,
+        1.0,
+        3.2490024566650391,
+        0.86099982261657715,
+        0.5,
+        0.56400001049041748,
+        0.0
+      ]
+    },
+    {
+      "plugin": "Fundamental",
+      "model": "LFO",
+      "pos": [
+        840.0,
+        0.0
+      ],
+      "params": [
+        0.0,
+        1.0,
+        2.8920016288757324,
+        0.73049908876419067,
+        0.5,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "plugin": "NYSTHI",
+      "model": "NYECHOEcoeco",
+      "pos": [
+        570.0,
+        0.0
+      ],
+      "params": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.59899997711181641,
+        0.57049983739852905,
+        1.0,
+        1.1860001087188721,
+        0.054569993168115616,
+        0.0,
+        0.0
+      ],
+      "data": {
+        "m_head_active0": true,
+        "m_head_active1": true,
+        "m_head_active2": true,
+        "m_head_active3": false,
+        "m_head_active4": false,
+        "m_head_active5": false,
+        "m_erasehead_active": false
+      }
+    }
+  ],
+  "wires": [
+    {
+      "outputModuleId": 1,
+      "outputId": 8,
+      "inputModuleId": 0,
+      "inputId": 0
+    },
+    {
+      "outputModuleId": 1,
+      "outputId": 9,
+      "inputModuleId": 0,
+      "inputId": 1
+    },
+    {
+      "outputModuleId": 3,
+      "outputId": 3,
+      "inputModuleId": 4,
+      "inputId": 0
+    },
+    {
+      "outputModuleId": 4,
+      "outputId": 0,
+      "inputModuleId": 2,
+      "inputId": 0
+    },
+    {
+      "outputModuleId": 4,
+      "outputId": 1,
+      "inputModuleId": 3,
+      "inputId": 0
+    },
+    {
+      "outputModuleId": 3,
+      "outputId": 1,
+      "inputModuleId": 3,
+      "inputId": 1
+    },
+    {
+      "outputModuleId": 2,
+      "outputId": 1,
+      "inputModuleId": 5,
+      "inputId": 13
+    },
+    {
+      "outputModuleId": 5,
+      "outputId": 6,
+      "inputModuleId": 1,
+      "inputId": 21
+    }
+  ]
+}
