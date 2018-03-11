@@ -1,5 +1,7 @@
 
-Copy the nvgRGB colors to 
+Copy the nvgRGB colors to Rack/src/app/WireWidget.cpp, then make Rack:
+[One of these days, I might just add all of the Pantone colors]
+
 static const NVGcolor wireColors[] = {
 	nvgRGB(0xc9, 0xb7, 0x0e), // yellow
 	nvgRGB(0xc9, 0x18, 0x47), // red
