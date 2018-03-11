@@ -3,8 +3,8 @@
 #include <thread>
 
 #include "dekstop.hpp"
-#include "samplerate.h"
-#include "../ext/osdialog/osdialog.h"
+#include "dsp/samplerate.hpp"
+#include "../dep/osdialog/osdialog.h"
 #include "write_wav.h"
 #include "dsp/digital.hpp"
 #include "dsp/ringbuffer.hpp"
@@ -13,15 +13,14 @@
 #define BLOCKSIZE 1024
 #define BUFFERSIZE 32*BLOCKSIZE
 
-template <unsigned int ChannelCount>
-struct Recorder : Module {
+struct Recorder8 : Module {
         enum ParamIds {
                 RECORD_PARAM,
                 NUM_PARAMS
         };
         enum InputIds {
                 AUDIO1_INPUT,
-                NUM_INPUTS = AUDIO1_INPUT + ChannelCount
+                NUM_INPUTS = AUDIO1_INPUT + 8
         };
         enum OutputIds {
                 NUM_OUTPUTS
@@ -37,15 +36,15 @@ struct Recorder : Module {
 
         std::mutex mutex;
         std::thread thread;
-        RingBuffer<Frame<ChannelCount>, BUFFERSIZE> buffer;
-        short writeBuffer[ChannelCount*BUFFERSIZE];
+        RingBuffer<Frame<8>, BUFFERSIZE> buffer;
+        short writeBuffer[8*BUFFERSIZE];
 
-        Recorder() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS)
+        Recorder8() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS)
         {
                 isRecording = false;
         }
-        ~Recorder();
-        void step();
+        ~Recorder8();
+        void step() override;
         void clear();
         void startRecording();
         void stopRecording();
@@ -55,35 +54,30 @@ struct Recorder : Module {
         void recorderRun();
 };
 
-template <unsigned int ChannelCount>
-Recorder<ChannelCount>::~Recorder() {
+Recorder8::~Recorder8() {
         if (isRecording) stopRecording();
 }
 
-template <unsigned int ChannelCount>
-void Recorder<ChannelCount>::clear() {
+void Recorder8::clear() {
         filename = "";
 }
 
-template <unsigned int ChannelCount>
-void Recorder<ChannelCount>::startRecording() {
+void Recorder8::startRecording() {
         saveAsDialog();
         if (!filename.empty()) {
                 openWAV();
                 isRecording = true;
-                thread = std::thread(&Recorder<ChannelCount>::recorderRun, this);
+                thread = std::thread(&Recorder8::recorderRun, this);
         }
 }
 
-template <unsigned int ChannelCount>
-void Recorder<ChannelCount>::stopRecording() {
+void Recorder8::stopRecording() {
         isRecording = false;
         thread.join();
         closeWAV();
 }
 
-template <unsigned int ChannelCount>
-void Recorder<ChannelCount>::saveAsDialog() {
+void Recorder8::saveAsDialog() {
         std::string dir = filename.empty() ? "." : extractDirectory(filename);
         char *path = osdialog_file(OSDIALOG_SAVE, dir.c_str(), "Output.wav", NULL);
         if (path) {
@@ -94,14 +88,11 @@ void Recorder<ChannelCount>::saveAsDialog() {
         }
 }
 
-template <unsigned int ChannelCount>
-void Recorder<ChannelCount>::openWAV() {
-        #ifdef v_050_dev
+void Recorder8::openWAV() {
         float gSampleRate = engineGetSampleRate();
-        #endif
         if (!filename.empty()) {
                 fprintf(stdout, "Recording to %s\n", filename.c_str());
-                int result = Audio_WAV_OpenWriter(&writer, filename.c_str(), gSampleRate, ChannelCount);
+                int result = Audio_WAV_OpenWriter(&writer, filename.c_str(), gSampleRate, 8);
                 if (result < 0) {
                         isRecording = false;
                         char msg[100];
@@ -112,8 +103,7 @@ void Recorder<ChannelCount>::openWAV() {
         }
 }
 
-template <unsigned int ChannelCount>
-void Recorder<ChannelCount>::closeWAV() {
+void Recorder8::closeWAV() {
         fprintf(stdout, "Stopping the recording.\n");
         int result = Audio_WAV_CloseWriter(&writer);
         if (result < 0) {
@@ -126,11 +116,26 @@ void Recorder<ChannelCount>::closeWAV() {
 }
 
 // Run in a separate thread
-template <unsigned int ChannelCount>
-void Recorder<ChannelCount>::recorderRun() {
-        #ifdef v_050_dev
+
+// Excerpts from
+// SoX Resampler Library      Copyright (c) 2007-18 robs@users.sourceforge.net
+
+#define rint16D(a,b) __asm__ __volatile__("fistps %0": "=m"(a): "t"(b): "st")
+
+static __inline int16_t rint16(double input) {
+  int16_t result; rint16D(result, input); return result;}
+
+void src_float_to_short_array(float const * src, short * dest, int len)
+{
+  double d, N = 1. + SHRT_MAX;
+  assert (src && dest);
+
+  while (len--) d = src[len] * N, dest[len] =
+    (short)(d > N - 1? (short)(N - 1) : d < -N? (short)-N : rint16(d));
+}
+
+void Recorder8::recorderRun() {
         float gSampleRate = engineGetSampleRate();
-        #endif
         while (isRecording) {
                 // Wake up a few times a second, often enough to never overflow the buffer.
                 float sleepTime = (1.0 * BUFFERSIZE / gSampleRate) / 2.0;
@@ -144,13 +149,13 @@ void Recorder<ChannelCount>::recorderRun() {
                         // Convert float frames to shorts
                         {
                                 std::lock_guard<std::mutex> lock(mutex); // Lock during conversion
-                                src_float_to_short_array(static_cast<float*>(buffer.data[0].samples), writeBuffer, ChannelCount*numFrames);
+                                src_float_to_short_array(static_cast<float*>(buffer.data[0].samples), writeBuffer, 8*numFrames);
                                 buffer.start = 0;
                                 buffer.end = 0;
                         }
 
                         fprintf(stdout, "Writing %d frames to disk\n", numFrames);
-                        int result = Audio_WAV_WriteShorts(&writer, writeBuffer, ChannelCount*numFrames);
+                        int result = Audio_WAV_WriteShorts(&writer, writeBuffer, 8*numFrames);
                         if (result < 0) {
                                 stopRecording();
 
@@ -163,15 +168,14 @@ void Recorder<ChannelCount>::recorderRun() {
         }
 }
 
-template <unsigned int ChannelCount>
-void Recorder<ChannelCount>::step() {
+void Recorder8::step() {
         lights[RECORDING_LIGHT].value = isRecording ? 1.0 : 0.0;
         if (isRecording) {
                 // Read input samples into recording buffer
                 std::lock_guard<std::mutex> lock(mutex);
                 if (!buffer.full()) {
-                        Frame<ChannelCount> f;
-                        for (unsigned int i = 0; i < ChannelCount; i++) {
+                        Frame<8> f;
+                        for (unsigned int i = 0; i < 8; i++) {
                                 f.samples[i] = inputs[AUDIO1_INPUT + i].value / 5.0;
                         }
                         buffer.push(f);
@@ -196,83 +200,54 @@ struct RecordButton : LEDButton {
         }
 };
 
+struct Recorder8Widget : ModuleWidget {
+        Recorder8Widget(Recorder8 *module);
+        json_t *toJsonData();
+        void fromJsonData(json_t *root);
+};
 
-template <unsigned int ChannelCount>
-RecorderWidget<ChannelCount>::RecorderWidget() {
-        Recorder<ChannelCount> *module = new Recorder<ChannelCount>();
-        setModule(module);
-        box.size = Vec(15*6+5, 380);
+Recorder8Widget::Recorder8Widget(Recorder8 *module) : ModuleWidget(module) {
+    float margin = 5;
+    float yPos = margin;
+    float xPos = margin;
 
-        {
-                Panel *panel = new LightPanel();
-                panel->box.size = box.size;
-                addChild(panel);
+    setPanel(SVG::load(assetPlugin(plugin, "res/Recorder8.svg")));
+    box.size = Vec(15*6+5, 380);
+
+    addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
+    addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
+    addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
+    addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
+
+    xPos = 35;
+    yPos += 2*margin;
+    ParamWidget *recordButton = ParamWidget::create<RecordButton>(Vec(xPos, yPos-1), module, Recorder8::RECORD_PARAM, 0.0, 1.0, 0.0);
+    RecordButton *btn = dynamic_cast<RecordButton*>(recordButton);
+    Recorder8 *recorder = dynamic_cast<Recorder8*>(module);
+
+    btn->onPressCallback = [=]()
+    {
+        if (!recorder->isRecording) {
+            recorder->startRecording();
+        } else {
+            recorder->stopRecording();
         }
+    };
+    addParam(recordButton);
+    addChild(ModuleLightWidget::create<SmallLight<RedLight>>(Vec(xPos+6, yPos+5), module, Recorder8::RECORDING_LIGHT));
 
-        float margin = 5;
-        float labelHeight = 15;
-        float yPos = margin;
-        float xPos = margin;
+    yPos += 5;
+    xPos = 10;
+    for (unsigned int i = 0; i < 8; i++) {
+            addInput(Port::create<PJ3410Port>(Vec(xPos, yPos), Port::INPUT, module, i));
 
-        {
-                Label *label = new Label();
-                label->box.pos = Vec(xPos, yPos);
-                label->text = "Recorder " + std::to_string(ChannelCount);
-                addChild(label);
-                yPos += labelHeight + margin;
-
-                xPos = 35;
-                yPos += 2*margin;
-                ParamWidget *recordButton = createParam<RecordButton>(Vec(xPos, yPos-1), module, Recorder<ChannelCount>::RECORD_PARAM, 0.0, 1.0, 0.0);
-                RecordButton *btn = dynamic_cast<RecordButton*>(recordButton);
-                Recorder<ChannelCount> *recorder = dynamic_cast<Recorder<ChannelCount>*>(module);
-
-                btn->onPressCallback = [=]()
-                {
-                        if (!recorder->isRecording) {
-                                recorder->startRecording();
-                        } else {
-                                recorder->stopRecording();
-                        }
-                };
-                addParam(recordButton);
-                addChild(createLight<SmallLight<RedLight>>(Vec(xPos+6, yPos+5), module, Recorder<ChannelCount>::RECORDING_LIGHT));
-                xPos = margin;
-                yPos += recordButton->box.size.y + 3*margin;
-        }
-
-        {
-                Label *label = new Label();
-                label->box.pos = Vec(margin, yPos);
-                label->text = "Channels";
-                addChild(label);
-                yPos += labelHeight + margin;
-        }
-
-        yPos += 5;
-        xPos = 10;
-        for (unsigned int i = 0; i < ChannelCount; i++) {
-                addInput(createInput<PJ3410Port>(Vec(xPos, yPos), module, i));
-                Label *label = new Label();
-                label->box.pos = Vec(xPos + 4, yPos + 28);
-                label->text = stringf("%d", i + 1);
-                addChild(label);
-
-                if (i % 2 ==0) {
-                        xPos += 37 + margin;
-                } else {
-                        xPos = 10;
-                        yPos += 40 + margin;
-                }
-        }
+            if (i % 2 ==0) {
+                    xPos += 37 + margin;
+            } else {
+                    xPos = 10;
+                    yPos += 40 + margin;
+            }
+    }
 }
+Model *modelRecorder8 = Model::create<Recorder8, Recorder8Widget>("dekstop", "Recorder8", "Recorder 8", UTILITY_TAG);
 
-Recorder2Widget::Recorder2Widget() :
-        RecorderWidget<2u>()
-{
-}
-
-Recorder8Widget::Recorder8Widget() :
-        RecorderWidget<8u>()
-{
-}

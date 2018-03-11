@@ -119,20 +119,12 @@ void Recorder2::closeWAV()
 }
 
 // Run in a separate thread
-static __inline int16_t rint16(double input) {
-  int16_t result; rint16D(result, input); return result;
-}
 
+
+// Excerpts from
+// SoX Resampler Library      Copyright (c) 2007-18 robs@users.sourceforge.net
+// See Recorder8.cpp for implementation, avoid multiple definition
 void src_float_to_short_array(float const *, short *, int);
-
-void src_float_to_short_array(float const * src, short * dest, int len)
-{
-  double d, N = 1. + SHRT_MAX;
-  assert (src && dest);
-
-  while (len--) d = src[len] * N, dest[len] =
-    (short)(d > N - 1? (short)(N - 1) : d < -N? (short)-N : rint16(d));
-}
 
 void Recorder2::recorderRun() {
         float gSampleRate = engineGetSampleRate();
