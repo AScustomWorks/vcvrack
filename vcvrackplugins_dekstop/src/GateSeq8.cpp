@@ -1,5 +1,6 @@
 #include "dekstop.hpp"
 #include "dsp/digital.hpp"
+#include "dsp/samplerate.hpp"
 
 const int NUM_STEPS = 12;
 const int NUM_CHANNELS = 8;
@@ -45,9 +46,9 @@ struct GateSEQ8 : Module {
         float stepLights[NUM_GATES] = {};
 
         GateSEQ8() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
-        void step();
+        void step() override;
 
-        json_t *toJson() {
+        json_t *toJson() override {
                 json_t *rootJ = json_object();
 
                 // Clock multiplier
@@ -65,7 +66,7 @@ struct GateSEQ8 : Module {
                 return rootJ;
         }
 
-        void fromJson(json_t *rootJ) {
+        void fromJson(json_t *rootJ) override {
                 // Clock multiplier
                 json_t *multiplierJ = json_object_get(rootJ, "multiplier");
                 if (!multiplierJ) {
@@ -82,24 +83,22 @@ struct GateSEQ8 : Module {
                 }
         }
 
-        void reset() {
+        void reset() override {
                 for (int i = 0; i < NUM_GATES; i++) {
                         gateState[i] = false;
                 }
         }
 
-        void randomize() {
+        void randomize() override {
                 for (int i = 0; i < NUM_GATES; i++) {
-                        gateState[i] = (randomf() > 0.5);
+                        gateState[i] = (randomUniform() > 0.5);
                 }
         }
 };
 
 
 void GateSEQ8::step() {
-        #ifdef v_050_dev
         float gSampleRate = engineGetSampleRate();
-        #endif
         const float lightLambda = 0.1;
         // Run
         if (runningTrigger.process(params[RUN_PARAM].value)) {
@@ -139,7 +138,7 @@ void GateSEQ8::step() {
 
         if (nextStep) {
                 // Advance step
-                int numSteps = clampi(roundf(params[STEPS_PARAM].value + inputs[STEPS_INPUT].value), 1, NUM_STEPS);
+                int numSteps = clamp((int)roundf(params[STEPS_PARAM].value + inputs[STEPS_INPUT].value), 1, NUM_STEPS);
                 index += 1;
                 if (index >= numSteps) {
                         index = 0;
@@ -206,10 +205,6 @@ struct GateSEQ8Widget : ModuleWidget {
         json_t *toJsonData();
         void fromJsonData(json_t *root);
 };
-
-ADSRWidget::ADSRWidget(ADSR *module) : ModuleWidget(module) {
-        setPanel(SVG::load(assetPlugin(plugin, "res/ADSR.svg")));
-
 
 GateSEQ8Widget::GateSEQ8Widget(GateSEQ8 *module) : ModuleWidget(module) {
     setPanel(SVG::load(assetPlugin(plugin, "res/GateSEQ8.svg")));

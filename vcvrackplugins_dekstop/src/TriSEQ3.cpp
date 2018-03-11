@@ -48,9 +48,9 @@ struct TriSEQ3 : Module {
         float stepLights[8] = {};
 
         TriSEQ3() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
-        void step();
+        void step() override ;
 
-        json_t *toJson() {
+        json_t *toJson() override {
                 json_t *rootJ = json_object();
 
                 json_t *gatesJ = json_array();
@@ -63,7 +63,7 @@ struct TriSEQ3 : Module {
                 return rootJ;
         }
 
-        void fromJson(json_t *rootJ) {
+        void fromJson(json_t *rootJ) override {
                 json_t *gatesJ = json_object_get(rootJ, "gates");
                 for (int i = 0; i < 8; i++) {
                         json_t *gateJ = json_array_get(gatesJ, i);
@@ -71,28 +71,23 @@ struct TriSEQ3 : Module {
                 }
         }
 
-#ifdef v_050_dev
-        void reset() {
-#else
-        void initialize() {
-#endif
+        void reset() override {
                 for (int i = 0; i < 8; i++) {
                         gateState[i] = false;
                 }
         }
 
-        void randomize() {
+        void randomize() override {
                 for (int i = 0; i < 8; i++) {
-                        gateState[i] = (randomf() > 0.5);
+                        gateState[i] = (randomUniform() > 0.5);
                 }
         }
 };
 
 
 void TriSEQ3::step() {
-        #ifdef v_050_dev
+
         float gSampleRate = engineGetSampleRate();
-        #endif
         const float lightLambda = 0.1;
         // Run
         if (runningTrigger.process(params[RUN_PARAM].value)) {
@@ -131,7 +126,7 @@ void TriSEQ3::step() {
 
         if (nextStep) {
                 // Advance step
-                int numSteps = clampi(roundf(params[STEPS_PARAM].value + inputs[STEPS_INPUT].value), 1, 8);
+                int numSteps = clamp((int)roundf(params[STEPS_PARAM].value + inputs[STEPS_INPUT].value), 1, 8);
                 index += 1;
                 if (index >= numSteps) {
                         index = 0;
@@ -173,9 +168,6 @@ struct TriSEQ3Widget : ModuleWidget {
         json_t *toJsonData();
         void fromJsonData(json_t *root);
 };
-
-ADSRWidget::ADSRWidget(ADSR *module) : ModuleWidget(module) {
-        setPanel(SVG::load(assetPlugin(plugin, "res/ADSR.svg")));
 
 TriSEQ3Widget::TriSEQ3Widget(TriSEQ3 *module) : ModuleWidget(module) {
         setPanel(SVG::load(assetPlugin(plugin, "res/TriSEQ3.svg")));
